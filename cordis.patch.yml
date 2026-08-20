@@ -1,0 +1,8 @@
+# dsh-skills-settings_sl bundle patch
+#
+# Installs the host half of the plugin into the profile bundle stack when the
+# package is mounted as a profile bundle (mirrors dsh-better-sidebar's
+# `dsh.bundle.patch` convention).
+- insert:
+    - id: skills-settings-sl
+      name: 'dsh-skills-settings_sl'
