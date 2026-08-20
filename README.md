@@ -1,83 +1,127 @@
 # dsh-skills-settings_sl
 
-DSH（DeepSeek Harness）Web 客户端插件：在**设置（Settings）界面**中新增一个「技能」分区，用于查看和管理已安装的 DSH 技能（Skills）。
+English | [中文](README.zh.md)
 
-## 功能
+A DSH (DeepSeek Harness) web client plugin that adds a **Skills** section to the
+**Settings** shell, for browsing and managing the DSH skills installed on the
+current machine.
 
-- **技能列表**：图标 + 名称 + 已安装标记 + 描述卡片，支持关键字搜索、悬停上浮效果
-- **分类筛选**：胶囊式筛选（全部 / 本地导入 / GitHub 导入 / 用户创建 / 记忆），分类信息读取自技能 `SKILL.md` frontmatter 的 `category` 字段
-- **创建技能**：三种来源
-  - 上传技能包（`.zip` / `.md`）→ 分类 `local`
-  - 通过 dsh 生成 → 分类 `user`
-  - 从 GitHub 仓库导入 → 分类 `github`
-- **技能详情**：Markdown 预览、分类下拉（改选即存）、编辑保存
-- **停用 / 启用**：通过 frontmatter 的 `disable-model-invocation` 切换（技能保持注册、列表可见，不修改文件后缀）
-- **删除**：二次确认
-- **立即使用**：将技能写入当前会话的对话输入框草稿（不直接发送）
+## Features
 
-## 安装
+- **Skill list** — icon + name + installed badge + description cards, with keyword search and hover lift
+- **Category filter** — pill filters (All / Local / GitHub / User-created / Memory); the category is read from the skill's `SKILL.md` frontmatter `category` field
+- **Create skill** — three sources:
+  - Upload a skill package (`.zip` / `.md`) → category `local`
+  - Generate via dsh → category `user`
+  - Import from a GitHub repository → category `github`
+- **Skill details** — Markdown preview, category dropdown (saves on change), edit and save
+- **Disable / enable** — toggles the frontmatter `disable-model-invocation` key (the skill stays registered and visible; the file suffix is never renamed)
+- **Delete** — with confirmation
+- **Use now** — writes the skill into the current session's input draft (does not send)
 
-> 建议采用**本地链接模式**安装（`file:` 指向本地源码目录），避免依赖 GitHub 安装链路导致插件无法加载。
+## Requirements
 
-1. 将本仓库克隆或下载到本机任意位置：
+- DSH web profile (`dsh --profile web`)
+- Node.js >= 20
 
-   ```bash
-   git clone https://github.com/sun-gift/dsh-skills-settings_sl.git
-   ```
+## Install (remote — no local files needed)
 
-2. 在 DSH 的 Web profile 配置 `C:\Users\sunny\.dsh\profiles\web\package.json` 中注册插件：
+The plugin is published to the npm registry, so you can install it straight from
+the registry — no cloning, no `file:` links, no manual copying.
 
-   ```jsonc
-   {
-     "dependencies": {
-       "dsh-skills-settings_sl": "file:D:/MyResearch/dsh-skills-settings_sl"
-     },
-     "dsh": {
-       "profile": {
-         "bundles": [
-           // ... 原有 bundle ...
-           "dsh-skills-settings_sl"
-         ]
-       }
-     }
-   }
-   ```
+### Option A — one command (recommended)
 
-3. 在 profile 目录执行依赖安装（`pnpm install` 或 `npm install`）。
-4. 重启 DSH 服务（`dsh --profile web`），刷新页面即可在设置界面看到「技能」分区。
+```sh
+dsh plugin --profile web add dsh-skills-settings_sl
+```
 
-## 文件结构
+This runs `pnpm add dsh-skills-settings_sl` inside your web profile and
+automatically appends the package to the profile's `dsh.profile.bundles` layer
+stack (the package declares `dsh.bundle.patch`).
+
+### Option B — manual
+
+Add the dependency and the bundle entry to your profile's `package.json`
+(`C:\Users\<you>\.dsh\profiles\web\package.json` on Windows,
+`~/.dsh/profiles/web/package.json` elsewhere):
+
+```jsonc
+{
+  "dependencies": {
+    "dsh-skills-settings_sl": "^0.2.0"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        // ... your existing bundles ...
+        "dsh-skills-settings_sl"
+      ]
+    }
+  }
+}
+```
+
+then run `pnpm install` (or `npm install`) inside the profile directory.
+
+### Fallback — GitHub tarball
+
+If the npm registry is unreachable, install from the GitHub tag archive instead
+(using the same package name in dependencies and bundles):
+
+```
+https://github.com/sun-gift/dsh-skills-settings_sl/archive/refs/tags/v0.2.0.tar.gz
+```
+
+## Update (remote)
+
+When a new version is published:
+
+```sh
+dsh plugin --profile web update dsh-skills-settings_sl
+```
+
+or change the version in your profile's `package.json` and run `pnpm install`.
+
+> **Restart required.** The host half and the plugin set are fixed at startup.
+> After installing, updating, or renaming a plugin you must restart the DSH
+> service (`dsh --profile web`) and refresh the page. (The browser half is
+> re-read from disk on request, so UI-only tweaks show up on refresh.)
+
+## File structure
 
 ```
 dsh-skills-settings_sl/
 ├── lib/
-│   ├── index.js      # host 端插件（cordis），提供 /plugins/skills-admin/* 路由
-│   └── client.js     # 客户端 bundle（设置界面 UI）
-├── cordis.patch.yml  # 组合树补丁
+│   ├── index.js      # host half (cordis plugin): /plugins/skills-admin/* routes
+│   └── client.js     # client bundle (Settings UI)
+├── cordis.patch.yml  # composition-tree patch (bundle layer)
 ├── package.json
-└── pnpm-lock.yaml
+└── README.md / README.zh.md / LICENSE
 ```
 
-## Host 端路由
+## Host routes
 
-前缀 `/plugins/skills-admin`：
+Prefix `/plugins/skills-admin`:
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| GET/PUT/POST/DELETE | `/skill` | 技能详情 / 编辑 / 创建 / 删除 |
-| POST | `/toggle` | 停用 / 启用（frontmatter `disable-model-invocation`） |
-| POST | `/upload` | 上传 `.zip` / `.md` 技能包 |
-| POST | `/import` | 从 GitHub 仓库导入 |
-| POST | `/category` | 修改技能分类 |
-| GET | `/list` | 合并分类 + 停用状态的技能列表 |
+| GET/PUT/POST/DELETE | `/skill` | skill detail / edit / create / delete |
+| POST | `/toggle` | disable / enable (frontmatter `disable-model-invocation`) |
+| POST | `/upload` | upload `.zip` / `.md` skill package |
+| POST | `/import` | import from a GitHub repository |
+| POST | `/category` | change a skill's category |
+| GET | `/list` | merged skill list (category + disabled state) |
 
-技能存放位置为项目根目录（向上查找 `.git`，无则回退当前目录）下的 `.dsh/skills/`。
+Skills live under `<project-root>/.dsh/skills/` (project root = nearest `.git`
+ancestor, else the session cwd).
 
-## 开发注意事项
+## Development notes
 
-- `package.json` 的 `exports` **必须同时导出 `./client` 与 `./package.json`**，否则客户端插件会被静默跳过（路由 404）
-- 客户端 UI 改动刷新页面即生效；host 端代码改动需重启 DSH 服务
-- 停用技能请使用 frontmatter `disable-model-invocation: true`，不要修改文件后缀
+- `package.json` `exports` must export both `./client` and `./package.json`, or
+  the client half is silently skipped (route 404)
+- UI changes apply on page refresh; host changes require a DSH restart
+- Disabling a skill uses the frontmatter `disable-model-invocation: true`, never
+  a file-suffix rename
 
 ## License
 
