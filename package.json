@@ -1,6 +1,6 @@
 {
   "name": "dsh-skills-settings_sl",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DSH web plugin: a Skills management section in the Settings shell — list, search, categorize, create (upload / generate via dsh / GitHub import), edit, enable/disable, and delete DSH skills.",
   "type": "module",
   "main": "lib/index.js",
